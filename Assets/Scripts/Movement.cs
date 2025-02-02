@@ -4,6 +4,7 @@ using UnityEngine.UIElements;
 
 public class Movement : MonoBehaviour
 {
+    [SerializeField] AudioSource audioSource;
     [SerializeField] InputAction rotation;
     [SerializeField] InputAction thrust;
     [SerializeField] float thrustStrength = 1000f;
@@ -51,6 +52,17 @@ public class Movement : MonoBehaviour
     private void ProcessThrust()
     {
         if (thrust.IsPressed())
+        {
             rb.AddRelativeForce(Vector3.up * thrustStrength * Time.fixedDeltaTime);
+            if (!audioSource.isPlaying)
+            {
+                audioSource.Play();
+            }
+        }
+        else
+        {
+            audioSource.Stop();
+
+        }
     }
 }
