@@ -4,13 +4,18 @@ using UnityEngine.UIElements;
 
 public class Movement : MonoBehaviour
 {
-    [SerializeField] AudioSource audioSource;
+    [SerializeField] AudioClip mainEngine;
     [SerializeField] InputAction rotation;
     [SerializeField] InputAction thrust;
+    [SerializeField] ParticleSystem mainParticles;
+    [SerializeField] ParticleSystem leftParticles;
+    [SerializeField] ParticleSystem rightParticles;
     [SerializeField] float thrustStrength = 1000f;
     [SerializeField] float rotationStrength = 100f;
 
+
     Rigidbody rb;
+    AudioSource audioSource;
 
 
     private void OnEnable()
@@ -20,6 +25,7 @@ public class Movement : MonoBehaviour
     }
     private void Start()
     {
+        audioSource = GetComponent<AudioSource>();
         rb = GetComponent<Rigidbody>();
     }
     private void FixedUpdate()
@@ -33,18 +39,27 @@ public class Movement : MonoBehaviour
         float rotationInput = rotation.ReadValue<float>();
         if (rotationInput < 0)
         {
-            ApplyRoation(rotationStrength);
+            ApplyRotation(rotationStrength);
+            if (!rightParticles.isPlaying)
+                rightParticles.Play();
         }
         else if (rotationInput > 0)
         {
-            ApplyRoation(-rotationStrength);
+            ApplyRotation(-rotationStrength);
+            if (!leftParticles.isPlaying)
+                leftParticles.Play();
+        }
+        else
+        {
+            leftParticles.Stop();
+            rightParticles.Stop();
         }
     }
 
-    private void ApplyRoation(float roationThisFrame)
+    private void ApplyRotation(float rotationThisFrame)
     {
         rb.freezeRotation = true;
-        transform.Rotate(Vector3.forward * roationThisFrame * Time.fixedDeltaTime);
+        transform.Rotate(Vector3.forward * rotationThisFrame * Time.fixedDeltaTime);
         rb.freezeRotation = false;
 
     }
@@ -52,17 +67,25 @@ public class Movement : MonoBehaviour
     private void ProcessThrust()
     {
         if (thrust.IsPressed())
-        {
-            rb.AddRelativeForce(Vector3.up * thrustStrength * Time.fixedDeltaTime);
-            if (!audioSource.isPlaying)
-            {
-                audioSource.Play();
-            }
-        }
+            startThrusting();
         else
         {
-            audioSource.Stop();
-
+            stopThrusting();
         }
+    }
+
+    private void startThrusting()
+    {
+        rb.AddRelativeForce(Vector3.up * thrustStrength * Time.fixedDeltaTime);
+        if (!audioSource.isPlaying)
+            audioSource.PlayOneShot(mainEngine);
+
+        if (!mainParticles.isPlaying)
+            mainParticles.Play();
+    }
+    private void stopThrusting()
+    {
+        audioSource.Stop();
+        mainParticles.Stop();
     }
 }
